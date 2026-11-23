@@ -1,0 +1,18 @@
+# build output and dependencies
+desktop/node_modules/
+desktop/dist/
+desktop/app/index.html
+desktop/server.js
+*.exe
+*.zip
+
+# live office data: real colleagues' names, desks and API keys
+live-office-data.json
+
+# local / editor files
+.DS_Store
+.Rhistory
+.claude/
+
+# office names (real people and rooms)
+config.yaml

@@ -1,0 +1,37 @@
+{
+  "name": "innovation-office",
+  "productName": "Innovation Office",
+  "version": "2.0.0",
+  "description": "Office life sim",
+  "main": "main.js",
+  "author": "Innovation Office",
+  "scripts": {
+    "sync": "cp ../innovation-office.html app/index.html && cp ../server/server.js server.js",
+    "start": "npm run sync && electron .",
+    "dist:win": "npm run sync && electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "com.innovationgroup.office",
+    "productName": "Innovation Office",
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "app/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "InnovationOffice.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}

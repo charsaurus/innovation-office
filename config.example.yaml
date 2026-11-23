@@ -1,0 +1,40 @@
+# Innovation Office names. Copy this file to config.yaml and put your office's real names in it.
+# config.yaml is gitignored, so real names never go to GitHub.
+# Put it next to innovation-office.html (live server) or next to InnovationOffice.exe (desktop app),
+# or load it in the game: ⚙️ Settings → 🏷️ Office names → Load config.yaml.
+
+company: Acme         # shown before "Innovation Office"
+tee: IO               # letters on the blue team tee (max 3)
+
+boss:
+  name: Morgan
+dj:
+  name: Kai
+
+rooms:                # meeting rooms (capacity is fixed)
+  huddle: Huddle      # 4 pax
+  focus: Focus        # 8 pax
+  studio: Studio      # 12 pax
+  summit: Summit      # 15 pax
+  lab: Lab            # 16 pax
+  auditorium: Auditorium  # 25 pax, with stage
+
+colleagues:           # computer-run colleagues (up to 6). body: girl or boy
+  - name: Alex
+    role: Product Manager
+    body: girl
+  - name: Sam
+    role: Data Scientist
+    body: boy
+  - name: Jamie
+    role: UX Designer
+    body: girl
+  - name: Chris
+    role: Engineer
+    body: boy
+  - name: Taylor
+    role: Innovation Lead
+    body: girl
+  - name: Jordan
+    role: Business Analyst
+    body: boy

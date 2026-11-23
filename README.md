@@ -1,27 +1,28 @@
 # Innovation Office
 
-An office life sim for an innovation team. You build and decorate your cubicle, do tasks and get promoted from Intern to CEO. You also join meetings, eat lunch with the team, nap in the Recharge Room, send colleagues food and drinks, and play together live on the office network.
+A multiplayer office sim in a single HTML file plus a zero-dependency Node server, built to bring a hybrid team together. It's an office life sim for a workplace team. You build and decorate your cubicle, do tasks and get promoted from Intern to CEO. You also join meetings, eat lunch with the team, nap in the Recharge Room, send colleagues food and drinks, and play together live on the office network.
 
 ## Files
 
 | File | What it is |
 |---|---|
-| `innovation-office.html` | The whole game in one file. Open it in Edge or Chrome. **Use this on bank laptops.** |
+| `innovation-office.html` | The whole game in one file. Open it in Edge or Chrome. No install needed. |
 | `server/server.js` | The live office server (Node.js, no extra packages): `node server/server.js` |
-| `InnovationOffice.exe` | Windows desktop app that can also host. It's unsigned, so bank antivirus blocks it (see below). |
+| `InnovationOffice.exe` | Windows desktop app that can also host. |
 | `desktop/` | Source for building the .exe |
 | `archive/` | Older versions |
 
-## Getting it onto a work laptop
+## Running it
 
-Bank security software flags the .exe as malicious because it's an unsigned program from an unknown publisher. **Don't try to get around this.** Use the HTML file instead: it's a plain web page, needs no install, and runs in Edge.
+The HTML file is a plain web page: it needs no install and works fully offline, and 🔗 **Share** codes let people visit each other's cubicles.
 
-For **live play** someone has to run the server. The options, best first:
-1. **Ask IT** to run `server/server.js` on an approved internal machine. It's about 200 lines of Node.js with no dependencies, so it's easy to review. After that, everyone opens `http://<that machine>:8787` in Edge.
-2. **Ask IT to sign or allow-list** `InnovationOffice.exe`. Then anyone can host from the app.
-3. For a demo: run `node server/server.js` on a personal laptop on the same network, if policy allows.
+For **live play**, one machine runs the server and everyone else opens its address:
 
-Without a server, the game still works fully offline, and 🔗 **Share** codes let people visit each other's cubicles.
+```bash
+node server/server.js
+```
+
+Then open `http://<that machine>:8787`. The server is about 200 lines of Node.js with no dependencies. You can also host from the desktop app.
 
 ## The office
 
@@ -86,12 +87,12 @@ node server/server.js delete Alex
 
 `delete` removes everyone with that name, so for duplicates use the id from `list` instead.
 
-## When the live server works on your Mac but not on a work laptop
+## When the live server can't be reached
 
-On the work laptop, open 🌐 **Live**, type the host address and press **🔍 Test connection**.
+On the computer that can't connect, open 🌐 **Live**, type the host address and press **🔍 Test connection**.
 
-- **❌ Can't reach:** the two computers can't see each other. Usually the work laptop is on the bank network or VPN while the Mac is on a different Wi-Fi. Bank networks are designed to block connections to personal devices. The fix is to host the server on a machine inside the bank network that IT approves.
-- **✅ Reachable but Join fails:** the network allows web pages but blocks live (WebSocket) connections. Ask IT to allow it.
+- **❌ Can't reach:** the two computers can't see each other. Usually they're on different networks (for example, one is on a VPN or guest Wi-Fi), or a firewall blocks port 8787. Host the server on a machine on the same network as the players.
+- **✅ Reachable but Join fails:** the network allows web pages but blocks live (WebSocket) connections. Allow WebSocket traffic on port 8787.
 
 ## People, romance and office politics
 

@@ -312,7 +312,7 @@ const TASK_TYPES=[
   {id:'sprint',name:'Run sprint planning in '+RN.summit,where:'summit',time:4,xp:34,coins:32,en:14,minRank:3},
   {id:'roadmap',name:'Draft the innovation roadmap',where:'corner',time:5,xp:55,coins:50,en:16,minRank:4},
 ];
-const IDEAS=['GenAI assistant for relationship managers','Gamified savings challenge for youths','Paperless SME onboarding','Voice banking for seniors','Green-loan carbon tracker','Chatbot that explains fees in plain English','Smart receipt scanner for expenses','Open-banking API sandbox','Kopi-chat mentoring programme','Hackathon for interns','Instant cross-border payments PoC','AI meeting-notes summariser'];
+const IDEAS=['GenAI assistant for the sales team','Gamified wellness challenge','Paperless customer onboarding','Voice app for seniors','Carbon footprint tracker','Chatbot that explains pricing in plain English','Smart receipt scanner for expenses','Public API sandbox','Kopi-chat mentoring programme','Hackathon for interns','Self-serve analytics dashboard PoC','AI meeting-notes summariser'];
 const LINES=['Coffee time ☕','PoC demo at 3pm!','Anyone tried the new sandbox?','Hackathon sign-ups are open 🎉','Who took my stapler?','Timesheets due Friday!','That pitch went well 🚀','Lunch at the hawker centre?','Need a fresh pair of eyes on this','Sprint retro later?','Has anyone seen the HDMI adapter?','Drinks after work? 🍻','Wine o\'clock yet? 🍷','Need a power nap 😴'];
 const REPLIES=['Haha yes!','Totally agree 😄','Tell me more!','Same here','Let\'s grab kopi later','👍','Good one!'];
 const LUNCH_LINES=['Nom nom 🍜','Chicken rice today 🍗','So hungry!','Laksa is the best 🍲','Who wants dessert? 🍰'];
@@ -1595,9 +1595,9 @@ async function testConnection(){
   out.innerHTML='<div class="box muted">Testing <code>'+esc(addr)+'</code>…</div>';
   const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),5000);
   try{const r=await fetch('http://'+addr+'/health',{signal:ctl.signal,cache:'no-store'});const j=await r.json();clearTimeout(t);
-    out.innerHTML='<div class="box">✅ <b>The server is reachable</b> ('+(j.online||0)+' online). If Join still fails, this network blocks live (WebSocket) connections, so ask IT to allow <code>ws://'+esc(addr)+'</code>.</div>';}
+    out.innerHTML='<div class="box">✅ <b>The server is reachable</b> ('+(j.online||0)+' online). If Join still fails, this network blocks live (WebSocket) connections, so ask your network admin to allow <code>ws://'+esc(addr)+'</code>.</div>';}
   catch(e){clearTimeout(t);
-    out.innerHTML='<div class="box">❌ <b>Can\'t reach '+esc(addr)+'.</b> Usually one of these:<br>• This computer and the host are on <b>different networks</b> (e.g. bank network vs. home or guest Wi-Fi, or VPN on one side).<br>• The bank network or this laptop\'s security <b>blocks connections to other computers</b> or to port 8787.<br>• The host\'s firewall blocks incoming connections.<br><span class="muted">Fix: host the server on a machine IT approves inside the bank network.</span></div>';}
+    out.innerHTML='<div class="box">❌ <b>Can\'t reach '+esc(addr)+'.</b> Usually one of these:<br>• This computer and the host are on <b>different networks</b> (e.g. office network vs. home or guest Wi-Fi, or VPN on one side).<br>• The network or this computer\'s security <b>blocks connections to other computers</b> or to port 8787.<br>• The host\'s firewall blocks incoming connections.<br><span class="muted">Fix: host the server on a machine on the same network as the players.</span></div>';}
 }
 function hostBox(){return '<div class="box">🏢 <b>You\'re hosting.</b> Tell colleagues to join with:<br>'+hostInfo.ips.map(ip=>'<code>'+esc(ip)+':'+hostInfo.port+'</code>').join(' or ')+'<br><span class="muted">or open <code>http://'+esc(hostInfo.ips[0]||'localhost')+':'+hostInfo.port+'</code> in Edge. Keep this app open while others play.</span></div>';}
 async function startHosting(){

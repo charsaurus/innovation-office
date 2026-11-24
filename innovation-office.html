@@ -82,6 +82,10 @@ pre.code{background:#0b2a5b;color:#d0e2ff;border-radius:8px;padding:8px;font-siz
 .meter{height:8px;background:#e9ecef;border-radius:5px;overflow:hidden;margin-top:3px}
 .meter>div{height:100%;background:linear-gradient(90deg,#51cf66,#94d82d);border-radius:5px}
 code{background:#f1f3f5;border-radius:6px;padding:1px 5px;font-size:12px}
+#alertBar{position:absolute;top:56px;left:50%;transform:translateX(-50%);background:#c92a2a;color:#fff;border-radius:14px;padding:8px 14px;display:none;align-items:center;gap:8px;z-index:6;font-size:14px;box-shadow:0 4px 16px rgba(201,42,42,.5);white-space:nowrap}
+#alertBar button{padding:4px 10px}
+#alarm{position:absolute;inset:0;pointer-events:none;display:none;z-index:4;animation:alarm 1s ease-in-out infinite}
+@keyframes alarm{0%,100%{box-shadow:inset 0 0 40px 10px rgba(224,49,49,.15)}50%{box-shadow:inset 0 0 90px 30px rgba(224,49,49,.55)}}
 #banner{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.97);border:3px solid #fff;border-radius:999px;padding:5px 6px 5px 14px;box-shadow:0 3px 12px rgba(0,0,0,.15);display:none;align-items:center;gap:8px;white-space:nowrap;font-size:13px;z-index:4}
 #banner button{border-radius:999px;padding:3px 10px}
 #toasts{position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:6px;pointer-events:none;z-index:6}
@@ -116,6 +120,7 @@ kbd{background:#eef2f8;border:1px solid var(--line);border-radius:4px;padding:0 
     <div class="pill" title="Experience"><div class="lvl" id="lvl">1</div><div><div id="prank" style="font-size:12px">Intern</div><div class="mini"><div id="xpfill" style="background:var(--gold)"></div></div></div></div>
     <div class="pill" title="Cubicle comfort"><span class="ic">👍</span><span id="comfort">0</span></div>
     <div class="pill" id="boostPill" style="display:none" title="XP boost"><span class="ic">🔥</span><span id="boostTxt"></span></div>
+    <div class="pill" id="goalPill" title="Your goal: get promoted all the way to CEO"><span class="ic">🎯</span><span id="goalTxt">Goal: CEO</span></div>
     <div class="pill" id="lunchPill" style="display:none" title="Lunch is served in the Pantry"><span class="ic">🍱</span>Lunch break</div>
     <div class="pill" style="margin-left:auto"><span class="ic">🕒</span><span id="clock">09:00</span></div>
     <div class="pill" id="livePill" title="Live office"><span class="d"></span><span id="liveTxt">Offline</span></div>
@@ -123,6 +128,7 @@ kbd{background:#eef2f8;border:1px solid var(--line);border-radius:4px;padding:0 
   <div id="stage">
     <canvas id="cv"></canvas>
     <div id="banner"></div>
+    <div id="alertBar"></div><div id="alarm"></div>
     <div id="toasts"></div>
     <div id="chatbar"><input id="chatIn" maxlength="80" placeholder="💬 Say something… (Enter)"></div>
     <div id="camctl"><button id="zIn" title="Zoom in">＋</button><button id="zOut" title="Zoom out">－</button><button id="zMe" title="Back to me">🎯</button></div>
@@ -171,7 +177,7 @@ const W=72,H=46,MAIN_W=60,BAR_X2=64,TW=40,TH=20;
 const OX=H*TW/2+40,OY=130,WW=(W+H)*TW/2+80,WH=(W+H)*TH/2+OY+60; // world (iso) size in px
 const EMOJI_FONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 const UI_FONT='"Trebuchet MS","Segoe UI",system-ui,sans-serif';
-const GAME_VERSION='1.2.0';
+const GAME_VERSION='1.3.0';
 // ======================= CONFIG: real names live in config.yaml (gitignored) =======================
 // Where the names come from, first match wins:
 //   1. the live server that served this page (it reads config.yaml next to the game)
@@ -396,8 +402,8 @@ function onDanceFloor(x,y){return x>=DANCE.x1&&x<=DANCE.x2&&y>=DANCE.y1&&y<=DANC
 function inClub(e){return Math.round(e.x)>=MAIN_W&&Math.round(e.y)<=9;}
 function isDancing(e){return barShown()&&!e.path.length&&onDanceFloor(Math.round(e.x),Math.round(e.y));}
 function danceTile(){return {x:ri(DANCE.x1,DANCE.x2),y:ri(DANCE.y1,DANCE.y2)};}
-const DJ_LINES=['Make some noise, IG! 🔊','Next up: Bollywood remix 🎶','Hands up! 🙌','This one\'s a banger 🔥','Shout out to the PoC team! 🚀','Bass drop in 3… 2… 1… 💥'];
-const DJ_REQUESTS=['Play some Bollywood! 🎶','Can you play Taylor Swift?','More bass, '+DJ+'! 🔊','Throwback please! 📼','Play our hackathon anthem! 🏆'];
+const DJ_LINES=['Make some noise, team! 🔊','Next up: a 90s throwback 🎶','Hands up! 🙌','This one\'s a banger 🔥','Shout out to the PoC team! 🚀','Bass drop in 3… 2… 1… 💥'];
+const DJ_REQUESTS=['Play something upbeat! 🎶','Can you play Taylor Swift?','More bass, '+DJ+'! 🔊','Throwback please! 📼','Play our hackathon anthem! 🏆'];
 const DJ_REPLIES=['You got it! 🎧','Coming right up 🎶','Ooh, good choice 😎','Adding it to the queue 🔥'];
 const BAR_STOOLS=[];for(let y=13;y<=21;y++)BAR_STOOLS.push({x:63,y});
 const BAR_MENU=['beer','wine','cocktail','mocktail'];
@@ -645,7 +651,7 @@ function addXP(n){
     toast('🎉 Promoted to '+RANKS[after].n+'!');floatText(player,'🎉 '+RANKS[after].n+'!','#e03131');
     if(after===3)toast('🗓️ You can now host meetings in any room (📣 Meetings).');
     if(after===4)toast('🔓 '+BOSS+'\'s office is now open to you.');
-    if(after===5)toast('👑 You made it to CEO. The crown is in the 🔨 Build shop!');
+    if(after===5){toast('👑 You made it to CEO. The crown is in the 🔨 Build shop!');setTimeout(()=>showChoice('🏆 You made it to CEO!','From Intern to the top of the office. Congratulations, you\'ve reached the goal of the game! 🎉<br><br>Keep playing to decorate, help colleagues and survive the next 🚨 GPU emergency.',[['👑 Celebrate',()=>{hearts(player,3);floatText(player,'👑 CEO!','#f59f00');}]]),600);}
     const outfits=[];for(const slot in WARDROBE)for(const k in WARDROBE[slot])if(WARDROBE[slot][k].r===after)outfits.push(WARDROBE[slot][k].n);
     if(outfits.length)toast('👗 New outfit unlocked: '+outfits.join(', ')+'! Try it in ⚙️ Settings → Wardrobe.');
     sendProfile();renderPanel();renderFriends();
@@ -1001,7 +1007,8 @@ function addRemote(pl){
 }
 function onLive(m){
   if(m.t==='welcome'){
-    live.on=true;live.connecting=false;live.admin=!!m.admin;live.apiKey=typeof m.apiKey==='string'?m.apiKey:'';
+    live.on=true;live.connecting=false;live.admin=!!m.admin;live.apiKey=typeof m.apiKey==='string'?m.apiKey:'';live.serverEmer=Array.isArray(m.features)&&m.features.includes('emergency');
+    if(live.serverEmer&&m.emergency)startEmergency(m.emergency.id,m.emergency.secs);
     if(m.config&&!window.OFFICE_CONFIG&&!(window.officeHost&&window.officeHost.config)){const c=JSON.stringify(cleanConfig(m.config));
       if(localStorage.getItem(CONFIG_KEY)!==c){localStorage.setItem(CONFIG_KEY,c);toast('🏷️ Got the office names from the host. They\'ll show next time you open the game.');}}live.players.clear();live.known.clear();
     (m.known||[]).forEach(k=>setKnown(k.id,k.p,k.seat));
@@ -1038,6 +1045,8 @@ function onLive(m){
     case 'romance-fail':toast(nameOf(m.to)+' isn\'t online right now.');break;
     case 'apikey':live.apiKey=String(m.key||'');showKey=true;toast('🔑 New API key ready');renderPanel();break;
     case 'cmd':runCmd(String(m.cmd||''),m.args);break;
+    case 'emergency':startEmergency(m.id,m.secs);break;
+    case 'emergency-result':if(m.id===emer.id){const me=state.id,made=(m.made||[]).includes(me);finishEmergency({ok:made,all:!!m.all,missed:(m.missed||[]).map(x=>String(x.name||'').slice(0,16))});}break;
     case 'announce':{const txt=String(m.text||'').slice(0,120),from=String(m.from||BOSS).slice(0,16);toast('📣 '+from+': '+txt);if(from.toLowerCase()===BOSS.toLowerCase())say(bossE,txt,8);break;}
     case 'forget':if(partnerKey()===m.id)setPartner(null);delete state.dms[m.id];live.players.delete(m.id);live.known.delete(m.id);delete state.friends[m.id];rebuildBlocked();renderFriends();renderPanel();updateLivePill();curCube=-2;save();break;
     case 'like':toast('👍 '+String(m.from).slice(0,16)+' liked your cubicle!');addXP(2);updateHUD();break;
@@ -1071,6 +1080,7 @@ function showChoice(title,html,choices){
   choices.forEach(([l,f])=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{m.classList.remove('show');f();};w.appendChild(b);});
   m.classList.add('show');
 }
+function unblockUser(id){state.blocked=state.blocked.filter(x=>x!==id);toast('✅ Unblocked '+nameOf(id)+'.');save();renderPanel();}
 function blockUser(id){
   if(!state.blocked.includes(id))state.blocked.push(id);
   if(partnerKey()===id){liveSend({t:'romance',to:id,kind:'breakup'});setPartner(null);}
@@ -1093,19 +1103,22 @@ function onDM(m){
   updateBadges();save();if(curPanel==='dms')renderPanel();
 }
 function dmBox(){
-  const ids=Object.keys(state.friends).filter(id=>!state.blocked.includes(id)).sort((a,b)=>(live.players.has(b)-live.players.has(a))||nameOf(a).localeCompare(nameOf(b)));
+  const ids=Object.keys(state.friends).sort((a,b)=>(live.players.has(b)-live.players.has(a))||nameOf(a).localeCompare(nameOf(b)));
   if(!ids.length)return '<div class="box">🔒 Secret chats are private 1-to-1 messages with real colleagues. Join the 🌐 Live office to start one.</div>';
   if(!dmSel||!ids.includes(dmSel))dmSel=ids[0];
   delete state.unread[dmSel];updateBadges();
   const th=(state.dms[dmSel]||[]).map(x=>'<div class="dm'+(x.me?' me':'')+'">'+esc(x.text)+'</div>').join('')||'<div class="muted" style="text-align:center;padding:20px 0">No messages yet. Say hi 👋</div>';
-  const on=live.players.has(dmSel);
-  return '<div class="chips">'+ids.map(id=>'<button class="chip'+(id===dmSel?' sel':'')+'" data-dm="'+esc(id)+'">'+(live.players.has(id)?'🟢 ':'⚪ ')+esc(nameOf(id))+(state.unread[id]?' <b class="ub">'+state.unread[id]+'</b>':'')+'</button>').join('')+'</div>'+
+  const on=live.players.has(dmSel),bl=state.blocked.includes(dmSel);
+  const chips='<div class="chips">'+ids.map(id=>'<button class="chip'+(id===dmSel?' sel':'')+'" data-dm="'+esc(id)+'">'+(state.blocked.includes(id)?'🚫 ':live.players.has(id)?'🟢 ':'⚪ ')+esc(nameOf(id))+(state.unread[id]?' <b class="ub">'+state.unread[id]+'</b>':'')+'</button>').join('')+'</div>';
+  if(bl)return chips+'<div class="box">🚫 You blocked <b>'+esc(nameOf(dmSel))+'</b>. They can\'t send you secret messages or romance requests.<p><button class="primary" id="dmUnblock">Unblock '+esc(nameOf(dmSel))+'</button></p></div>';
+  return chips+
     '<div class="thread" id="dmThread">'+th+'</div>'+
     '<div class="row" style="grid-template-columns:1fr auto;display:grid"><input id="dmIn" maxlength="300" placeholder="'+(on?'🔒 Secret message to '+esc(nameOf(dmSel))+'…':esc(nameOf(dmSel))+' is offline')+'" '+(on?'':'disabled')+'><button class="primary" id="dmGo" '+(on?'':'disabled')+'>Send</button></div>'+
     '<div class="muted" style="margin-top:6px">🔒 Only you and '+esc(nameOf(dmSel))+' see these. The server passes them along but never saves them. <a href="#" id="dmBlock">🚫 Block</a> · <a href="#" id="dmClear">🗑️ Clear chat</a></div>';
 }
 function dmBind(B){
   B.querySelectorAll('[data-dm]').forEach(b=>b.onclick=()=>{dmSel=b.dataset.dm;renderPanel();});
+  if($('dmUnblock'))$('dmUnblock').onclick=()=>unblockUser(dmSel);
   const th=$('dmThread');if(th)th.scrollTop=th.scrollHeight;
   const inp=$('dmIn');if(!inp)return;
   const go=()=>{sendDM(dmSel,inp.value);inp.value='';const i2=$('dmIn');if(i2)i2.focus();};
@@ -1247,7 +1260,7 @@ const POLITICS=[
     ['🙏 Ask {a} nicely',{ta:8},'{a} frees up the room. Diplomacy wins.']]},
 ];
 let politicsT=rnd(90,150);
-function politicsAllowed(){return state.setup&&!['choiceModal','meetModal','setupModal'].some(id=>$(id)&&$(id).classList.contains('show'));}
+function politicsAllowed(){return state.setup&&emer.phase==='idle'&&!['choiceModal','meetModal','setupModal'].some(id=>$(id)&&$(id).classList.contains('show'));}
 function polApply(fx,a,b){
   const out=[];
   if(fx.rep){state.rep=Math.max(-100,Math.min(100,state.rep+fx.rep));out.push((fx.rep>0?'+':'')+fx.rep+' 🏛️');}
@@ -1292,7 +1305,7 @@ function peopleBind(B){
   B.querySelectorAll('[data-dt]').forEach(b=>b.onclick=()=>coffeeDate(b.dataset.dt));
   B.querySelectorAll('[data-ao]').forEach(b=>b.onclick=()=>askOut(b.dataset.ao));
   B.querySelectorAll('[data-msg]').forEach(b=>b.onclick=()=>{dmSel=b.dataset.msg;openPanelForce('dms');});
-  B.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>{state.blocked=state.blocked.filter(x=>x!==b.dataset.ub);save();renderPanel();});
+  B.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>unblockUser(b.dataset.ub));
   if($('pBreak'))$('pBreak').onclick=breakUp;
 }
 
@@ -1331,6 +1344,66 @@ function runCmd(cmd,a){
     case 'dm':{const k=who();if(!k)break;if(isNpcKey(k)){tag('secret chats are for real colleagues');break;}sendDM(k,a.text);tag('sent a secret message to '+nameOf(k));break;}
     case 'wink':{const k=who();if(k)flirt(k);break;}
   }
+}
+
+// ======================= 🚨 GPU EMERGENCY =======================
+// Every 5 minutes the GPUs shut down. Everyone has 60 seconds to gather in the auditorium for the Great Reboot
+// (a group Ctrl… Alt… Delete!). Make it and earn XP; miss it and you're sent back to Intern.
+// In the live office the server runs the timer, so everyone gets the alarm at the same moment.
+const EMERGENCY_EVERY=300,EMERGENCY_SECS=60;
+let emer={phase:'idle',t:EMERGENCY_EVERY,id:0};
+const emerZone=()=>ROOMS.auditorium;
+function emerSeat(e){const s=emerZone().seats.filter(q=>!seatTaken(q,e));return s.length?pick(s):TASK_SPOTS.auditorium;}
+function startEmergency(id,secs){
+  if(!state.setup||emer.phase==='gather'||emer.phase==='wait')return;
+  emer={phase:'gather',t:secs||EMERGENCY_SECS,id:id||Date.now(),uiT:0};
+  toast('🚨 GPU EMERGENCY! Every GPU is shutting down. Get to '+RN.auditorium+' for the Great Reboot!');
+  npcs.forEach((n,i)=>{if(npcHidden(i))return;n.dating=false;n.lunching=false;n.emergency=true;n.onArrive=null;const s=emerSeat(n);goTo(n,s.x,s.y,'npc',()=>say(n,pick(['Made it! 😅','Phew 💦','Is it hot in here? 🔥'])));});
+  bossE.hold=(secs||EMERGENCY_SECS)+15;goTo(bossE,TASK_SPOTS.auditorium.x,TASK_SPOTS.auditorium.y,'boss',()=>say(bossE,'Everyone here? Reboot on my count! 🖥️',4));
+  updateAlert();
+}
+function goToReboot(){const s=emerSeat(player);pendingTarget=s;work=null;if(!walkPlayer(s.x,s.y))toast('Can\'t find a way to '+RN.auditorium+'!');}
+function inZone(e){return inRoom(e,emerZone());}
+function emergencyDeadline(){
+  const ok=inZone(player);
+  if(live.on&&live.serverEmer){emer.phase='wait';emer.t=8;liveSend({t:'emergency-status',id:emer.id,ok});updateAlert();return;}
+  finishEmergency({ok,all:ok,missed:ok?[]:[state.player.name]});
+}
+function finishEmergency(r){
+  if(emer.phase!=='gather'&&emer.phase!=='wait')return;
+  emer={phase:'ritual',t:6,id:emer.id};updateAlert();
+  const zone=emerZone(),chanters=[...(r.ok?[player]:[]),...npcs.filter((n,i)=>!npcHidden(i)&&inRoom(n,zone)),bossE];
+  ['Ctrl… ⌨️','Alt… ⌨️','DELETE! 💥'].forEach((w,k)=>setTimeout(()=>chanters.forEach(e=>say(e,w,1.3)),k*1200));
+  setTimeout(()=>{chanters.forEach(e=>floatText(e,'💚','#2f9e44'));
+    if(r.ok&&r.all){reward(25,20);toast('💚 Great Reboot complete! Every GPU is back online.');}
+    else if(r.ok){reward(10,5);toast('💚 GPUs are back, but '+r.missed.slice(0,4).join(', ')+(r.missed.length>4?' and others':'')+' didn\'t make it and went back to Intern.');}
+    else demote();
+  },3800);
+  setTimeout(()=>{npcs.forEach(n=>{if(n.emergency){n.emergency=false;n.timer=rnd(1,5);goTo(n,n.home.x,n.home.y,'npc');}});bossE.hold=2;bossE.timer=0;},6500);
+}
+function demote(){
+  const r=rankIdx(),old=RANKS[r].n;state.player.xp=0;updateHUD();sendProfile();renderFriends();renderPanel();save();
+  floatText(player,'💥 Back to Intern','#e03131');
+  showChoice('💥 The GPUs crashed!',r?'You didn\'t make it to <b>'+esc(RN.auditorium)+'</b> in time, so you\'re back to <b>Intern</b> (you were '+old+').<br><br>Your coins, décor and outfits are safe. 🎯 Climb back to CEO, and run next time the alarm goes off!':
+    'You didn\'t make it to <b>'+esc(RN.auditorium)+'</b> in time. You\'re already an Intern, so there\'s nowhere lower to go… this time. 😅',[['😤 Back to work',()=>{}]]);
+}
+function updateAlert(){
+  const a=$('alertBar'),on=emer.phase==='gather'||emer.phase==='wait';
+  $('alarm').style.display=on?'block':'none';
+  if(!on){a.style.display='none';return;}
+  const here=inZone(player),others=[...live.players.values()],there=others.filter(r=>inZone(r.e)).length+(here?1:0),total=others.length+1;
+  a.style.display='flex';
+  a.innerHTML=emer.phase==='wait'?'🖥️ Checking who made it…':
+    '🚨 <b>GPU EMERGENCY</b> · get to '+esc(RN.auditorium)+' in <b>'+Math.ceil(emer.t)+'s</b>'+(total>1?' · 👥 '+there+'/'+total+' there':'')+
+    (here?' · ✅ you\'re in!':' <button id="aGo">🏃 Go now</button>');
+  if($('aGo'))$('aGo').onclick=goToReboot;
+}
+function emergencyTick(dt){
+  if(emer.phase==='idle'){if(!(live.on&&live.serverEmer)&&state.setup){emer.t-=dt;if(emer.t<=0)startEmergency();}return;}
+  emer.t-=dt;emer.uiT=(emer.uiT||0)-dt;if(emer.uiT<=0){emer.uiT=.25;updateAlert();}
+  if(emer.phase==='gather'&&emer.t<=0)emergencyDeadline();
+  else if(emer.phase==='wait'&&emer.t<=0)finishEmergency({ok:inZone(player),all:inZone(player),missed:[]}); // server didn't answer
+  else if(emer.phase==='ritual'&&emer.t<=0){emer={phase:'idle',t:EMERGENCY_EVERY,id:0};updateAlert();}
 }
 
 // ======================= CAMERA & INPUT =======================
@@ -1425,6 +1498,7 @@ document.addEventListener('keydown',e=>{if((e.key==='r'||e.key==='R')&&!/INPUT|T
 // ======================= UI: HUD, PANELS, FRIENDS =======================
 function updateHUD(){
   const p=state.player,r=rankIdx(),next=RANKS[r+1];
+  const togo=RANKS.length-1-r;$('goalTxt').textContent=togo?'Goal: CEO · '+togo+' rank'+(togo>1?'s':'')+' to go':'👑 CEO reached!';
   $('lvl').textContent=r+1;$('prank').textContent=RANKS[r].n+(next?' · '+p.xp+'/'+next.xp:' · max');
   const lo=RANKS[r].xp,hi=next?next.xp:lo+1;
   $('xpfill').style.width=(next?Math.min(100,(p.xp-lo)/(hi-lo)*100):100)+'%';
@@ -1562,7 +1636,7 @@ const PANEL_RENDER={
       if($('cfgClear'))$('cfgClear').onclick=()=>{localStorage.removeItem(CONFIG_KEY);save();location.reload();};$('barTog').onchange=e=>toggleBar(e.target.checked);
       B.querySelectorAll('input[data-i]').forEach(inp=>{inp.onkeydown=e=>e.stopPropagation();inp.onchange=()=>{const v=inp.value.trim();if(!v)return;state.team[+inp.dataset.i][inp.dataset.f]=v;save();renderFriends();};});
       $('resetBtn').onclick=()=>{if(confirm('Reset all progress on this computer?')){liveDisconnect(true);localStorage.removeItem(SAVE_KEY);localStorage.removeItem(OLD_KEY);location.reload();}};}},
-  help:{html(){return '<p><b>Move:</b> click the floor. Drag to look around, scroll or ＋/－ to zoom, 🎯 to find yourself.</p>'+
+  help:{html(){return '<div class="box">🎯 <b>Your goal: become CEO.</b> Start as an Intern and climb Analyst → Associate → Manager → Director → CEO by earning ⭐ XP from tasks, meetings and office life. Watch out: miss a 🚨 GPU emergency and you\'re back to Intern!</div><p><b>🚨 GPU emergency:</b> every 5 minutes the GPUs shut down. Everyone has 60 seconds to get to '+esc(RN.auditorium)+' for the Great Reboot. Everyone makes it: bonus XP. Miss it: back to Intern.</p><p><b>Move:</b> click the floor. Drag to look around, scroll or ＋/－ to zoom, 🎯 to find yourself.</p>'+
       '<p><b>Work:</b> 📋 Tasks → <i>Go</i>. Earn ⭐ XP and 🪙 coins and get promoted: Intern → Analyst → Associate → Manager → Director → CEO.</p>'+
       '<p><b>Gifts:</b> food and drinks from colleagues appear on your desk. Click one to eat or drink 25% at a time for ⚡ energy and 🔥 XP boosts.</p>'+
       '<p><b>Lunch:</b> 12–2pm (real time). Lunch is served at the Pantry counter, once a day.</p>'+
@@ -1675,7 +1749,7 @@ let setupSel=null,setupDir=1;
 function openSetup(){
   setupSel=Object.assign({},state.player.look,{name:state.setup?state.player.name:''});setupDir=1;
   $('setTitle').textContent=state.setup?'👗 Wardrobe':'Welcome to the office! 👋';
-  $('setSub').textContent=state.setup?'Try anything on. Free items are yours; others cost coins or unlock when you\'re promoted.':'Create your avatar. You can change it any time from 👗 Wardrobe in ⚙️ Settings.';
+  $('setSub').textContent=state.setup?'Try anything on. Free items are yours; others cost coins or unlock when you\'re promoted.':'🎯 Your goal: start as an Intern and work your way up to CEO. First, create your avatar.';
   $('setGo').textContent=state.setup?'Save look':'Start working →';$('setCancel').style.display=state.setup?'':'none';
   renderSetup();$('setupModal').classList.add('show');
 }
@@ -1951,6 +2025,8 @@ function render(t){
   // what's on screen (world px), to skip drawing off-screen tiles
   const vx0=cam.x-VW/2/cam.zoom-60,vx1=cam.x+VW/2/cam.zoom+60,vy0=cam.y-VH/2/cam.zoom-40,vy1=cam.y+VH/2/cam.zoom+120;
   const vis=(x,y)=>{const p=iso(x,y);return p.x>vx0&&p.x<vx1&&p.y>vy0&&p.y<vy1;};
+  if(emer.phase==='gather'){const z=emerZone(),a=.18+Math.abs(Math.sin(t*.006))*.3;
+    for(let y=z.y1;y<=z.y2;y++)for(let x=z.x1;x<=z.x2;x++)if(!blocked[y][x])diamond(ctx,x,y,'rgba(224,49,49,'+a+')',null,.02);}
   if(barShown()&&vis(65,5)){ // LED dance floor
     const beat=Math.floor(t/420);
     for(let y=DANCE.y1;y<=DANCE.y2;y++)for(let x=DANCE.x1;x<=DANCE.x2;x++){const h=((x*53+y*97+beat*71)%6)*60;diamond(ctx,x,y,'hsla('+h+',90%,60%,'+((x+y+beat)%3===0?.9:.55)+')','rgba(0,0,0,.35)',.03);}}
@@ -2027,7 +2103,7 @@ function updateNPC(n,dt){
   if(npcHidden(n.idx)){n.hidden=true;return;}
   if(n.hidden){n.hidden=false;n.x=n.home.x;n.y=n.home.y;n.path=[];n.meeting=false;n.lunching=false;}
   moveEnt(n,dt);if(n.bubbleT>0)n.bubbleT-=dt;
-  if(n.meeting||n.dating)return;
+  if(n.meeting||n.dating||n.emergency)return;
   // lunch: head to the pantry and stay until 2pm
   if(isLunch()&&!n.lunching){const free=PANTRY_SEATS.filter(s=>!seatTaken(s,n));if(free.length){const s=pick(free);n.lunching=true;n.onArrive=null;goTo(n,s.x,s.y,'npc',()=>say(n,pick(LUNCH_LINES)));return;}}
   if(n.lunching){if(isLunch()){if(!n.path.length&&Math.random()<dt*.04)say(n,pick(LUNCH_LINES));return;}n.lunching=false;goTo(n,n.home.x,n.home.y,'npc');n.timer=rnd(5,15);return;}
@@ -2084,7 +2160,8 @@ function tick(now){
   loveTick(dt);
   if(politicsAllowed()){politicsT-=dt;if(politicsT<=0){politicsT=rnd(200,360);politicsEvent();}}
   npcGiftT-=dt;if(npcGiftT<=0){npcGiftT=rnd(150,240);npcGift();}
-  if(meeting.phase==='idle'){if(!isLunch())meeting.t-=dt;if(meeting.t<=0){meeting.phase='announced';meeting.room=pick(['studio','focus','lab']);meeting.hosted=false;meeting.t=25;toast('📣 Stand-up in '+ROOMS[meeting.room].name+' in 25s! Be there for bonus XP.');renderPanel();updateBadges();}}
+  emergencyTick(dt);
+  if(meeting.phase==='idle'){if(!isLunch()&&emer.phase==='idle')meeting.t-=dt;if(meeting.t<=0){meeting.phase='announced';meeting.room=pick(['studio','focus','lab']);meeting.hosted=false;meeting.t=25;toast('📣 Stand-up in '+ROOMS[meeting.room].name+' in 25s! Be there for bonus XP.');renderPanel();updateBadges();}}
   else if(meeting.phase==='announced'){meeting.t-=dt;if(meeting.t<=0)startMeeting();}
   else if(meeting.phase==='live'){meeting.t-=dt;
     if(!meeting.joined&&!player.path.length&&inRoom(player,ROOMS[meeting.room])){meeting.joined=true;openMeetModal();}

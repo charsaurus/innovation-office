@@ -111,6 +111,24 @@ function start(opts = {}) {
 
   const clients = new Map(); // socket -> client
 
+  // 🚨 GPU emergency: every 5 minutes while anyone is online, everyone gets 60 seconds to gather.
+  // Each game reports whether its player made it; then everyone hears who made it and who missed it.
+  const EMER_EVERY = (opts.emergencyEvery || 300) * 1000, EMER_SECS = opts.emergencySecs || 60;
+  let emer = null, nextEmer = Date.now() + EMER_EVERY;
+  const emerTimer = setInterval(() => {
+    const now = Date.now();
+    if (!online().length) { nextEmer = now + EMER_EVERY; return; }
+    if (!emer && now >= nextEmer) {
+      emer = { id: now, ends: now + EMER_SECS * 1000, reports: new Map() };
+      broadcast({ t: 'emergency', id: emer.id, secs: EMER_SECS });
+    } else if (emer && now >= emer.ends + 3000) { // 3s grace for reports
+      const made = [], missed = [];
+      for (const c of online()) (emer.reports.get(c.id) ? made : missed).push(c);
+      broadcast({ t: 'emergency-result', id: emer.id, all: !missed.length, made: made.map(c => c.id), missed: missed.map(c => ({ id: c.id, name: c.p.name })) });
+      emer = null; nextEmer = now + EMER_EVERY;
+    }
+  }, 1000);
+
   const server = http.createServer((req, res) => {
     const url = (req.url || '/').split('?')[0];
     if (url === '/' || url === '/index.html') {
@@ -346,7 +364,8 @@ function start(opts = {}) {
       const onlineIds = new Set(online().map(o => o.id));
       const known = Object.entries(data.profiles).filter(([pid]) => pid !== id && !onlineIds.has(pid))
         .map(([pid, p]) => ({ id: pid, p, seat: pid in data.seatOf ? data.seatOf[pid] : -1 }));
-      send(c, { t: 'welcome', seat, players: online().filter(o => o !== c).map(pub), known, gifts, admin: c.admin, apiKey: data.keys[id], config: config() || undefined });
+      send(c, { t: 'welcome', seat, players: online().filter(o => o !== c).map(pub), known, gifts, admin: c.admin, apiKey: data.keys[id], config: config() || undefined,
+        features: ['emergency'], emergency: emer ? { id: emer.id, secs: Math.max(1, Math.round((emer.ends - Date.now()) / 1000)) } : undefined });
       broadcast({ t: 'join', pl: pub(c) }, c);
       return;
     }
@@ -409,6 +428,9 @@ function start(opts = {}) {
         data.keys[c.id] = newKey(); persist();
         send(c, { t: 'apikey', key: data.keys[c.id] });
         break;
+      case 'emergency-status':
+        if (emer && m.id === emer.id) emer.reports.set(c.id, !!m.ok);
+        break;
       case 'like': {
         const target = online().find(o => o.id === str(m.to, 24));
         if (target) send(target, { t: 'like', from: c.p.name });
@@ -420,7 +442,7 @@ function start(opts = {}) {
   server.listen(port, '0.0.0.0');
   return {
     server, port, ips: lanIPs(),
-    close() { for (const c of clients.values()) c.sock.destroy(); server.close(); },
+    close() { clearInterval(emerTimer); for (const c of clients.values()) c.sock.destroy(); server.close(); },
   };
 }
 

@@ -1,6 +1,6 @@
 # Innovation Office
 
-A multiplayer office sim in a single HTML file plus a zero-dependency Node server, built to bring a hybrid team together. It's an office life sim for a workplace team. You build and decorate your cubicle, do tasks and get promoted from Intern to CEO. You also join meetings, eat lunch with the team, nap in the Recharge Room, send colleagues food and drinks, and play together live on the office network.
+A multiplayer office sim in a single HTML file plus a zero-dependency Node server, built to bring a hybrid team together. It's an office life sim for a workplace team. **The goal: start as an Intern and get promoted all the way to CEO.** You build and decorate your cubicle, do tasks and get promoted from Intern to CEO. You also join meetings, eat lunch with the team, nap in the Recharge Room, send colleagues food and drinks, and play together live on the office network.
 
 ## Files
 
@@ -94,11 +94,20 @@ On the computer that can't connect, open 🌐 **Live**, type the host address an
 - **❌ Can't reach:** the two computers can't see each other. Usually they're on different networks (for example, one is on a VPN or guest Wi-Fi), or a firewall blocks port 8787. Host the server on a machine on the same network as the players.
 - **✅ Reachable but Join fails:** the network allows web pages but blocks live (WebSocket) connections. Allow WebSocket traffic on port 8787.
 
+## 🚨 GPU emergency
+
+Every 5 minutes every GPU in the office shuts down. An alarm goes off, and everyone has **60 seconds** to get to the auditorium for the Great Reboot, a group *Ctrl… Alt… Delete!*. A 🏃 **Go now** button walks you there.
+
+- Everyone makes it: bonus XP and coins for all.
+- Anyone who misses it is **sent back to Intern**. Coins, décor and outfits are safe.
+
+In the live office the server runs the timer, so everyone gets the alarm at the same moment.
+
 ## People, romance and office politics
 
 Open **💕 People**, or click anyone in the office, for these actions:
 
-- **Romance:** 💐 flirt with a computer colleague once a day to build 💗 affection. ☕ Take them on a coffee date (15🪙, from 💗 30), then 🌹 ask them out (from 💗 70). With real colleagues you can 😉 wink and 🌹 ask them out; they get a pop-up to say yes or no. Couples get 💕 next to their names and hearts when they're together. Anyone can 🚫 block someone.
+- **Romance:** 💐 flirt with a computer colleague once a day to build 💗 affection. ☕ Take them on a coffee date (15🪙, from 💗 30), then 🌹 ask them out (from 💗 70). With real colleagues you can 😉 wink and 🌹 ask them out; they get a pop-up to say yes or no. Couples get 💕 next to their names and hearts when they're together. Anyone can 🚫 block someone, and unblock them later from 💬 Chats or 💕 People.
 - **Office politics:** every few minutes a dilemma pops up, for example someone taking credit for your idea, gossip in the Pantry or a fight over budget. Your choices change your 🏛️ reputation and your trust with colleagues (🤝 allies, ⚔️ rivals). Good reputation and allies give a task XP bonus.
 - **💬 Secret chats:** private 1-to-1 messages with real colleagues in the live office. The server passes them along but never saves them. They are kept only on the two players' own computers.
 

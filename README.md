@@ -103,6 +103,8 @@ Every 5 minutes every GPU in the office shuts down. An alarm goes off, and every
 
 In the live office the server runs the timer, so everyone gets the alarm at the same moment.
 
+The game **pauses while its window is hidden or minimised**: you're skipped for any emergency while away, and other players don't see you listed as missing.
+
 ## People, romance and office politics
 
 Open **💕 People**, or click anyone in the office, for these actions:

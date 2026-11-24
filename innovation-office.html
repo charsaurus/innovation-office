@@ -177,7 +177,7 @@ const W=72,H=46,MAIN_W=60,BAR_X2=64,TW=40,TH=20;
 const OX=H*TW/2+40,OY=130,WW=(W+H)*TW/2+80,WH=(W+H)*TH/2+OY+60; // world (iso) size in px
 const EMOJI_FONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
 const UI_FONT='"Trebuchet MS","Segoe UI",system-ui,sans-serif';
-const GAME_VERSION='1.3.0';
+const GAME_VERSION='1.3.1';
 // ======================= CONFIG: real names live in config.yaml (gitignored) =======================
 // Where the names come from, first match wins:
 //   1. the live server that served this page (it reads config.yaml next to the game)
@@ -1007,7 +1007,7 @@ function addRemote(pl){
 }
 function onLive(m){
   if(m.t==='welcome'){
-    live.on=true;live.connecting=false;live.admin=!!m.admin;live.apiKey=typeof m.apiKey==='string'?m.apiKey:'';live.serverEmer=Array.isArray(m.features)&&m.features.includes('emergency');
+    live.on=true;live.connecting=false;live.admin=!!m.admin;live.apiKey=typeof m.apiKey==='string'?m.apiKey:'';live.serverEmer=Array.isArray(m.features)&&m.features.includes('emergency');if(document.hidden)liveSend({t:'away',on:true});
     if(live.serverEmer&&m.emergency)startEmergency(m.emergency.id,m.emergency.secs);
     if(m.config&&!window.OFFICE_CONFIG&&!(window.officeHost&&window.officeHost.config)){const c=JSON.stringify(cleanConfig(m.config));
       if(localStorage.getItem(CONFIG_KEY)!==c){localStorage.setItem(CONFIG_KEY,c);toast('🏷️ Got the office names from the host. They\'ll show next time you open the game.');}}live.players.clear();live.known.clear();
@@ -1046,7 +1046,7 @@ function onLive(m){
     case 'apikey':live.apiKey=String(m.key||'');showKey=true;toast('🔑 New API key ready');renderPanel();break;
     case 'cmd':runCmd(String(m.cmd||''),m.args);break;
     case 'emergency':startEmergency(m.id,m.secs);break;
-    case 'emergency-result':if(m.id===emer.id){const me=state.id,made=(m.made||[]).includes(me);finishEmergency({ok:made,all:!!m.all,missed:(m.missed||[]).map(x=>String(x.name||'').slice(0,16))});}break;
+    case 'emergency-result':if(m.id===emer.id&&!document.hidden&&!(m.excused||[]).includes(state.id)){const me=state.id,made=(m.made||[]).includes(me);finishEmergency({ok:made,all:!!m.all,missed:(m.missed||[]).map(x=>String(x.name||'').slice(0,16))});}break;
     case 'announce':{const txt=String(m.text||'').slice(0,120),from=String(m.from||BOSS).slice(0,16);toast('📣 '+from+': '+txt);if(from.toLowerCase()===BOSS.toLowerCase())say(bossE,txt,8);break;}
     case 'forget':if(partnerKey()===m.id)setPartner(null);delete state.dms[m.id];live.players.delete(m.id);live.known.delete(m.id);delete state.friends[m.id];rebuildBlocked();renderFriends();renderPanel();updateLivePill();curCube=-2;save();break;
     case 'like':toast('👍 '+String(m.from).slice(0,16)+' liked your cubicle!');addXP(2);updateHUD();break;
@@ -1355,7 +1355,7 @@ let emer={phase:'idle',t:EMERGENCY_EVERY,id:0};
 const emerZone=()=>ROOMS.auditorium;
 function emerSeat(e){const s=emerZone().seats.filter(q=>!seatTaken(q,e));return s.length?pick(s):TASK_SPOTS.auditorium;}
 function startEmergency(id,secs){
-  if(!state.setup||emer.phase==='gather'||emer.phase==='wait')return;
+  if(!state.setup||document.hidden||emer.phase==='gather'||emer.phase==='wait')return;
   emer={phase:'gather',t:secs||EMERGENCY_SECS,id:id||Date.now(),uiT:0};
   toast('🚨 GPU EMERGENCY! Every GPU is shutting down. Get to '+RN.auditorium+' for the Great Reboot!');
   npcs.forEach((n,i)=>{if(npcHidden(i))return;n.dating=false;n.lunching=false;n.emergency=true;n.onArrive=null;const s=emerSeat(n);goTo(n,s.x,s.y,'npc',()=>say(n,pick(['Made it! 😅','Phew 💦','Is it hot in here? 🔥'])));});
@@ -1398,6 +1398,13 @@ function updateAlert(){
     (here?' · ✅ you\'re in!':' <button id="aGo">🏃 Go now</button>');
   if($('aGo'))$('aGo').onclick=goToReboot;
 }
+// Paused while the game is hidden: a minimised window or another tab never gets you demoted.
+let hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  liveSend({t:'away',on:document.hidden});
+  if(document.hidden){hiddenAt=Date.now();if(emer.phase==='gather'||emer.phase==='wait'){emer={phase:'idle',t:EMERGENCY_EVERY,id:0};updateAlert();npcs.forEach(n=>{if(n.emergency){n.emergency=false;goTo(n,n.home.x,n.home.y,'npc');}});}}
+  else{last=performance.now();if(Date.now()-hiddenAt>10000)toast('▶️ Welcome back! The game was paused while you were away.');}
+});
 function emergencyTick(dt){
   if(emer.phase==='idle'){if(!(live.on&&live.serverEmer)&&state.setup){emer.t-=dt;if(emer.t<=0)startEmergency();}return;}
   emer.t-=dt;emer.uiT=(emer.uiT||0)-dt;if(emer.uiT<=0){emer.uiT=.25;updateAlert();}
@@ -1636,7 +1643,7 @@ const PANEL_RENDER={
       if($('cfgClear'))$('cfgClear').onclick=()=>{localStorage.removeItem(CONFIG_KEY);save();location.reload();};$('barTog').onchange=e=>toggleBar(e.target.checked);
       B.querySelectorAll('input[data-i]').forEach(inp=>{inp.onkeydown=e=>e.stopPropagation();inp.onchange=()=>{const v=inp.value.trim();if(!v)return;state.team[+inp.dataset.i][inp.dataset.f]=v;save();renderFriends();};});
       $('resetBtn').onclick=()=>{if(confirm('Reset all progress on this computer?')){liveDisconnect(true);localStorage.removeItem(SAVE_KEY);localStorage.removeItem(OLD_KEY);location.reload();}};}},
-  help:{html(){return '<div class="box">🎯 <b>Your goal: become CEO.</b> Start as an Intern and climb Analyst → Associate → Manager → Director → CEO by earning ⭐ XP from tasks, meetings and office life. Watch out: miss a 🚨 GPU emergency and you\'re back to Intern!</div><p><b>🚨 GPU emergency:</b> every 5 minutes the GPUs shut down. Everyone has 60 seconds to get to '+esc(RN.auditorium)+' for the Great Reboot. Everyone makes it: bonus XP. Miss it: back to Intern.</p><p><b>Move:</b> click the floor. Drag to look around, scroll or ＋/－ to zoom, 🎯 to find yourself.</p>'+
+  help:{html(){return '<div class="box">🎯 <b>Your goal: become CEO.</b> Start as an Intern and climb Analyst → Associate → Manager → Director → CEO by earning ⭐ XP from tasks, meetings and office life. Watch out: miss a 🚨 GPU emergency and you\'re back to Intern!</div><p><b>🚨 GPU emergency:</b> every 5 minutes the GPUs shut down. Everyone has 60 seconds to get to '+esc(RN.auditorium)+' for the Great Reboot. Everyone makes it: bonus XP. Miss it: back to Intern. The game pauses while its window is hidden or minimised, so you\'re never demoted while away.</p><p><b>Move:</b> click the floor. Drag to look around, scroll or ＋/－ to zoom, 🎯 to find yourself.</p>'+
       '<p><b>Work:</b> 📋 Tasks → <i>Go</i>. Earn ⭐ XP and 🪙 coins and get promoted: Intern → Analyst → Associate → Manager → Director → CEO.</p>'+
       '<p><b>Gifts:</b> food and drinks from colleagues appear on your desk. Click one to eat or drink 25% at a time for ⚡ energy and 🔥 XP boosts.</p>'+
       '<p><b>Lunch:</b> 12–2pm (real time). Lunch is served at the Pantry counter, once a day.</p>'+

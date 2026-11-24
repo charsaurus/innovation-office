@@ -122,9 +122,9 @@ function start(opts = {}) {
       emer = { id: now, ends: now + EMER_SECS * 1000, reports: new Map() };
       broadcast({ t: 'emergency', id: emer.id, secs: EMER_SECS });
     } else if (emer && now >= emer.ends + 3000) { // 3s grace for reports
-      const made = [], missed = [];
-      for (const c of online()) (emer.reports.get(c.id) ? made : missed).push(c);
-      broadcast({ t: 'emergency-result', id: emer.id, all: !missed.length, made: made.map(c => c.id), missed: missed.map(c => ({ id: c.id, name: c.p.name })) });
+      const made = [], missed = [], excused = [];
+      for (const c of online()) (c.away ? excused : emer.reports.get(c.id) ? made : missed).push(c); // hidden games are excused
+      broadcast({ t: 'emergency-result', id: emer.id, all: !missed.length, made: made.map(c => c.id), missed: missed.map(c => ({ id: c.id, name: c.p.name })), excused: excused.map(c => c.id) });
       emer = null; nextEmer = now + EMER_EVERY;
     }
   }, 1000);
@@ -427,6 +427,10 @@ function start(opts = {}) {
       case 'newkey':
         data.keys[c.id] = newKey(); persist();
         send(c, { t: 'apikey', key: data.keys[c.id] });
+        break;
+      case 'away': // game window hidden or minimised
+        c.away = !!m.on;
+        if (!c.away && emer) { const secs = Math.round((emer.ends - Date.now()) / 1000); if (secs > 3) send(c, { t: 'emergency', id: emer.id, secs }); }
         break;
       case 'emergency-status':
         if (emer && m.id === emer.id) emer.reports.set(c.id, !!m.ok);
